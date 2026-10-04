@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Logic Check – concept mockup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #eef0f4;
+    --surface: #ffffff;
+    --surface-2: #f6f7fa;
+    --line: #dfe2e9;
+    --text: #1b2030;
+    --muted: #5d6578;
+    --accent: #4b45e5;
+    --accent-dark: #3a35c4;
+    --accent-soft: #eceafd;
+    --green: #17803d;
+    --green-soft: #e6f5ec;
+    --amber: #a85a00;
+    --amber-soft: #fff3df;
+    --red: #b3261e;
+    --red-soft: #fdecea;
+    --shadow: 0 1px 2px rgba(20,25,45,.06), 0 8px 24px rgba(20,25,45,.07);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #0f1220; overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text); }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1920px; height: 1080px;
+    background: var(--bg); transform-origin: center center; overflow: hidden; }
+
+  /* ---------- chrome ---------- */
+  #topbar { position: absolute; left: 0; right: 0; top: 0; height: 72px; background: var(--surface);
+    border-bottom: 1px solid var(--line); display: flex; align-items: center; padding: 0 48px; gap: 32px; z-index: 5; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 22px; }
+  .brand .mark { width: 32px; height: 32px; border-radius: 9px; background: linear-gradient(135deg,#6d66f5,#3a35c4); }
+  .stepper { display: flex; gap: 12px; margin-left: 40px; align-items: center; }
+  .step { display: flex; align-items: center; gap: 10px; font-size: 20px; color: var(--muted); padding: 8px 16px; border-radius: 999px; }
+  .step .n { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; font-size: 16px; font-weight: 700; }
+  .step.active { background: var(--accent-soft); color: var(--accent-dark); font-weight: 600; }
+  .step.active .n { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .step.done .n { background: var(--green); border-color: var(--green); color: #fff; }
+  .step.done { color: var(--text); }
+  .step-sep { width: 36px; height: 2px; background: var(--line); }
+  #conceptTag { position: absolute; right: 48px; top: 22px; font-size: 16px; font-weight: 600; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--amber); background: var(--amber-soft); border: 1px solid #f0d49f;
+    padding: 6px 14px; border-radius: 999px; }
+
+  .screen { position: absolute; left: 0; right: 0; top: 72px; bottom: 0; padding: 40px 48px;
+    opacity: 0; visibility: hidden; transition: opacity .25s ease; }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  /* ---------- buttons ---------- */
+  button, select, input, textarea { font-family: inherit; }
+  .btn { font-size: 22px; font-weight: 600; border-radius: 12px; padding: 16px 30px; cursor: pointer; border: 2px solid transparent; transition: all .2s ease; }
+  .btn.primary { background: var(--accent); color: #fff; box-shadow: 0 6px 18px rgba(75,69,229,.35); }
+  .btn.primary:hover { background: var(--accent-dark); }
+  .btn.secondary { background: var(--surface); color: var(--muted); border-color: var(--line); }
+  .btn.secondary:hover { border-color: #b9bfcd; color: var(--text); }
+  .btn.ghost { background: transparent; color: var(--muted); font-weight: 500; padding: 16px 20px; }
+  .btn.ghost:hover { color: var(--text); }
+
+  /* ---------- screen 1 ---------- */
+  #s1 { display: grid; place-items: center; }
+  .create { width: 1180px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); padding: 44px 52px; }
+  .create h1 { margin: 0 0 6px; font-size: 40px; letter-spacing: -.01em; }
+  .create .sub { margin: 0 0 26px; font-size: 20px; color: var(--muted); }
+  label.field { display: block; font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+  #memo { width: 100%; height: 430px; resize: none; border: 1px solid var(--line); border-radius: 14px; background: var(--surface-2);
+    padding: 20px 24px; font-size: 20px; line-height: 1.55; color: var(--text); }
+  .row { display: flex; align-items: flex-end; gap: 24px; margin-top: 26px; }
+  select.dd { font-size: 20px; padding: 14px 44px 14px 18px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%235d6578' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 16px center; appearance: none; color: var(--text); cursor: pointer; min-width: 340px; }
+  .grow { flex: 1; }
+  .hint { font-size: 18px; color: var(--muted); margin-top: 14px; text-align: right; }
+
+  /* ---------- screen 2 ---------- */
+  #s2 { display: grid; grid-template-columns: 760px 1fr; gap: 36px; padding-bottom: 0; }
+  .col { display: flex; flex-direction: column; min-height: 0; }
+  .col h2 { margin: 0; font-size: 28px; letter-spacing: -.01em; }
+  .col .colsub { font-size: 18px; color: var(--muted); margin: 2px 0 12px; }
+  .colhead { display: flex; align-items: center; justify-content: space-between; }
+  .pill { font-size: 18px; font-weight: 700; padding: 6px 16px; border-radius: 999px; background: var(--amber-soft); color: var(--amber); border: 1px solid #f0d49f; transition: all .3s ease; }
+  .pill.ok { background: var(--green-soft); color: var(--green); border-color: #b9e2c8; }
+
+  .scroll { flex: 1; min-height: 0; overflow-y: auto; padding-right: 6px; scrollbar-width: thin; }
+  .item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; }
+  .item .state { width: 28px; height: 28px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 17px; font-weight: 700; }
+  .state.ok { background: var(--green-soft); color: var(--green); }
+  .state.warn { background: var(--amber-soft); color: var(--amber); transition: all .3s; }
+  .state.resolved { background: var(--green); color: #fff; }
+  .item .txt { flex: 1; min-width: 0; }
+  .item .name { font-size: 20px; font-weight: 600; line-height: 1.25; }
+  .item .plan { font-size: 18px; color: var(--muted); margin-top: 2px; }
+  select.mini { font-size: 18px; padding: 8px 32px 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235d6578' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center; appearance: none; cursor: pointer; color: var(--text); }
+  .group { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; margin-bottom: 18px; overflow: hidden; }
+  .group-head { display: flex; align-items: center; gap: 14px; padding: 16px 18px; cursor: pointer; user-select: none; }
+  .group-head .name { flex: 1; font-size: 20px; font-weight: 600; }
+  .group-head .chev { color: var(--muted); font-size: 18px; transition: transform .2s; }
+  .group.open .chev { transform: rotate(90deg); }
+  .group-body { max-height: 0; overflow: hidden; transition: max-height .35s ease; background: var(--surface-2); }
+  .group.open .group-body { max-height: 400px; }
+  .group-body .item { margin: 6px 12px; padding: 8px 14px; box-shadow: none; }
+  .group-body .item .name { font-size: 19px; }
+  .group-body .item .plan { margin-top: 0; }
+  .group-body .item:first-child { margin-top: 10px; }
+  .group-body .item:last-child { margin-bottom: 10px; }
+  .sect { font-size: 18px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 6px 0 10px; }
+  .item.flagged { border-color: #f0d49f; background: #fffaf0; transition: all .3s; }
+  .item.flagged.resolved { border-color: #b9e2c8; background: #f4fbf7; }
+
+  /* flag cards */
+  .card { background: var(--surface); border: 1px solid var(--line); border-left: 6px solid var(--amber); border-radius: 16px; margin-bottom: 8px; box-shadow: var(--shadow); overflow: hidden; transition: border-color .4s, background .4s, box-shadow .4s; }
+  .card.sev-unsupported { border-left-color: var(--red); }
+  .card .body { padding: 12px 22px 12px; max-height: 420px; opacity: 1; transition: max-height .5s ease, opacity .3s ease, padding .5s ease; }
+  .card .done-row { display: flex; align-items: center; gap: 14px; max-height: 0; opacity: 0; overflow: hidden; padding: 0 22px; font-size: 20px; transition: max-height .5s ease .1s, opacity .4s ease .25s, padding .5s ease; }
+  .card.done { border-left-color: var(--green); background: #f4fbf7; box-shadow: none; }
+  .card.done .body { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; }
+  .card.done .done-row { max-height: 100px; opacity: 1; padding: 20px 22px; }
+  .done-row .tick { width: 30px; height: 30px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; font-weight: 700; flex: none; }
+  .done-row .lbl { flex: 1; }
+  .done-row .lbl b { font-weight: 700; }
+  .done-row .lbl span { color: var(--muted); }
+  .link { background: none; border: none; color: var(--accent-dark); font-size: 18px; cursor: pointer; padding: 4px 6px; text-decoration: underline; }
+  .tag { display: inline-block; font-size: 17px; font-weight: 700; padding: 4px 12px; border-radius: 8px; letter-spacing: .02em; }
+  .tag.inc { background: var(--amber-soft); color: var(--amber); }
+  .tag.uns { background: var(--red-soft); color: var(--red); }
+  .card h3 { margin: 6px 0 8px; font-size: 21px; line-height: 1.35; font-weight: 600; }
+  .evgrid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }
+  .ev, .src { border-radius: 12px; padding: 9px 14px; font-size: 18px; line-height: 1.45; }
+  .ev { background: var(--surface-2); border: 1px solid var(--line); }
+  .ev .k, .src .k { font-size: 17px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+  .ev .math { font-variant-numeric: tabular-nums; font-size: 18px; word-break: break-word; }
+  .ev .result { margin-top: 6px; font-weight: 700; color: var(--red); font-variant-numeric: tabular-nums; }
+  .src { border-left: 4px solid #c3c8d6; background: #fff; color: #333a4d; font-style: italic; border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .src .k { font-style: normal; }
+  .actions { display: flex; gap: 12px; margin-top: 8px; align-items: center; }
+  .abtn { font-size: 18px; font-weight: 600; padding: 10px 18px; border-radius: 10px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--text); transition: all .15s; }
+  .abtn:hover { border-color: var(--accent); color: var(--accent-dark); background: var(--accent-soft); }
+  .abtn.dismiss { color: var(--muted); margin-left: auto; }
+  .reason { display: none; gap: 10px; margin-top: 10px; align-items: center; }
+  .card.dismissing .actions { display: none; }
+  .card.dismissing .reason { display: flex; }
+  .reason input { flex: 1; font-size: 18px; padding: 10px 14px; border-radius: 10px; border: 2px solid var(--accent); outline: none; }
+  .abtn[disabled] { opacity: .45; cursor: not-allowed; }
+  .abtn[disabled]:hover { border-color: var(--line); color: var(--text); background: var(--surface); }
+
+  .footer { height: 88px; display: flex; align-items: center; gap: 22px; border-top: 1px solid var(--line); padding: 0 48px; background: var(--surface); flex: none; }
+  .footer .spacer { flex: 1; }
+  .footer .note { font-size: 18px; color: var(--muted); max-width: 520px; text-align: right; line-height: 1.35; }
+  #s2 .footer { grid-column: 1 / -1; }
+  .s2wrap { position: absolute; inset: 0; display: flex; flex-direction: column; }
+  .s2cols { flex: 1; min-height: 0; display: grid; grid-template-columns: 620px 1fr; gap: 32px; padding: 24px 48px 0; }
+  #s2 { padding: 0; display: block; }
+
+  /* ---------- screen 3 ---------- */
+  #s3 { padding: 0; }
+  .s3head { display: flex; align-items: center; gap: 20px; padding: 24px 48px 0; }
+  .s3head .doc { font-size: 24px; font-weight: 700; }
+  .badge { margin-left: auto; font-size: 20px; font-weight: 700; padding: 10px 20px; border-radius: 999px; background: var(--green-soft); color: var(--green); border: 1px solid #b9e2c8; display: inline-flex; gap: 10px; align-items: center; }
+  .badge.warn { background: var(--amber-soft); color: var(--amber); border-color: #f0d49f; }
+  .slidewrap { display: grid; place-items: center; padding-top: 22px; }
+  .slide { width: 1300px; height: 731px; background: #fff; border-radius: 10px; box-shadow: 0 2px 4px rgba(20,25,45,.08), 0 24px 60px rgba(20,25,45,.18); padding: 48px 64px 28px; position: relative; display: flex; flex-direction: column; }
+  .slide .kicker { font-size: 18px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: .08em; }
+  .slide h1 { margin: 8px 0 22px; font-size: 38px; line-height: 1.2; letter-spacing: -.015em; max-width: 1100px; }
+  .chart { flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-height: 0; }
+  .bar-row { display: grid; grid-template-columns: 170px 1fr 120px; align-items: center; gap: 16px; }
+  .bar-row .lab { font-size: 20px; text-align: right; color: #333a4d; }
+  .bar-row .lab.pri { font-weight: 700; color: var(--text); }
+  .bar-row .track { height: 30px; }
+  .bar-row .fill { height: 100%; border-radius: 0 6px 6px 0; background: #b8bdd0; width: 0; transition: width .9s cubic-bezier(.2,.7,.2,1); }
+  .bar-row .fill.pri { background: var(--accent); }
+  .bar-row .val { font-size: 20px; font-variant-numeric: tabular-nums; color: #333a4d; }
+  .legend { display: flex; gap: 24px; font-size: 18px; color: var(--muted); margin: 6px 0 0 186px; }
+  .legend i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 8px; vertical-align: -1px; }
+  .slide .foot { border-top: 1px solid var(--line); padding-top: 12px; margin-top: 14px; font-size: 18px; color: var(--muted); }
+  .notes { width: 1300px; margin: 18px auto 0; background: var(--amber-soft); border: 1px solid #f0d49f; border-radius: 12px; padding: 14px 20px; font-size: 18px; line-height: 1.45; color: #5c3600; display: none; }
+  .notes.show { display: block; }
+  .notes b { color: var(--amber); }
+  #s3 .hintbar { position: absolute; left: 48px; bottom: 26px; font-size: 18px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <header id="topbar">
+    <div class="brand"><div class="mark"></div>Deckwright</div>
+    <div class="stepper">
+      <div class="step" data-step="1"><span class="n">1</span>Create</div><div class="step-sep"></div>
+      <div class="step" data-step="2"><span class="n">2</span>Logic check</div><div class="step-sep"></div>
+      <div class="step" data-step="3"><span class="n">3</span>Deck</div>
+    </div>
+    <div id="conceptTag">Concept mockup</div>
+  </header>
+
+  <!-- SCREEN 1 -->
+  <section class="screen" id="s1">
+    <div class="create">
+      <h1>Create a new deck</h1>
+      <p class="sub">Paste your source material. We'll check it before we build.</p>
+      <label class="field" for="memo">Paste text</label>
+      <textarea id="memo" readonly></textarea>
+      <div class="row">
+        <div>
+          <label class="field" for="deckType">Deck type</label>
+          <select class="dd" id="deckType">
+            <option>Analytical / Case study</option>
+            <option>Pitch / Sales</option>
+            <option>Status update</option>
+            <option>Training / Explainer</option>
+          </select>
+        </div>
+        <div class="grow"></div>
+        <button class="btn primary" id="reviewBtn">Review logic →</button>
+      </div>
+      <div class="hint">Checks for contradictions and unsupported claims before any slides are made.</div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2 -->
+  <section class="screen" id="s2">
+    <div class="s2wrap">
+      <div class="s2cols">
+        <div class="col">
+          <h2>What I extracted</h2>
+          <div class="colsub" id="extractSub"></div>
+          <div class="scroll" id="leftScroll"></div>
+        </div>
+        <div class="col">
+          <div class="colhead">
+            <h2 id="issuesTitle">3 issues need your attention</h2>
+            <span class="pill" id="counter">3 issues remaining</span>
+          </div>
+          <div style="height:12px"></div>
+          <div class="scroll" id="cards"></div>
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn ghost" id="back2">← Back</button>
+        <div class="spacer"></div>
+        <div class="note" id="anywayNote"><button class="link" id="anywayBtn">Generate anyway</button><br>Unresolved issues will be listed in the speaker notes.</div>
+        <button class="btn secondary" id="genBtn">Generate deck →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3 -->
+  <section class="screen" id="s3">
+    <div class="s3head">
+      <button class="btn ghost" id="back3" style="padding:8px 14px;font-size:20px">← Back to review</button>
+      <span class="doc">Surge planning · Slide 1 of 1</span>
+      <span class="badge" id="badge"></span>
+    </div>
+    <div class="slidewrap">
+      <div class="slide">
+        <div class="kicker">Surge allocation · Baseline scenario</div>
+        <h1 id="slideTitle"></h1>
+        <div class="chart" id="chart"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>Priority counties (SNAP use 35–39%)</span><span><i style="background:#b8bdd0"></i>Other counties</span></div>
+        <div class="foot" id="slideFoot"></div>
+      </div>
+    </div>
+    <div class="notes" id="notes"></div>
+  </section>
+</div>
+
+<script>
+/* =====================================================================
+   MOCK_DATA — edit the numbers and quotes here. Everything on screen
+   (sums, ratios, shares, chart bars, flag math) is derived from this.
+   ===================================================================== */
+const MOCK_DATA = {
+  counties: [
+    { name: "Tuscaloosa", lbs: 3000000 },
+    { name: "Bibb",       lbs: 1420000 },
+    { name: "Fayette",    lbs: 190000 },
+    { name: "Greene",     lbs: 330000 },
+    { name: "Hale",       lbs: 281000 },
+    { name: "Lamar",      lbs: 100000 },
+    { name: "Marion",     lbs: 280000 },
+    { name: "Pickens",    lbs: 320000 },
+    { name: "Sumter",     lbs: 310000 }
+  ],
+  priorityCounties: ["Greene", "Sumter"],
+  prioritySnapRange: "35–39%",
+  scenarios: [
+    { name: "Low",      pct: 20, lbs:  930000 },
+    { name: "Baseline", pct: 30, lbs: 1630000 },
+    { name: "High",     pct: 50, lbs: 2330000 }
+  ],
+  baselineIndex: 1,
+  currentWeeklyLbs: 100000,
+  weeks: 2,
+  // Memo wording. Replace with exact quotes from the real memo.
+  quotes: {
+    allocation: "County allocations are shown in the table below and total the baseline scenario.",
+    realistic: "Distributing 1.63M additional pounds over two weeks is a realistic target for the network.",
+    priority: "Greene and Sumter are priority areas given the region's highest SNAP participation."
+  }
+};
+
+/* ---------- derived values (no hard-coded results) ---------- */
+const D = MOCK_DATA;
+const fmt = n => n.toLocaleString("en-US");
+const fmtM = n => (n / 1e6).toFixed(2) + "M";
+const pct1 = x => (x * 100).toFixed(1) + "%";
+const SUM = D.counties.reduce((a, c) => a + c.lbs, 0);
+const BASE = D.scenarios[D.baselineIndex];
+const CURRENT_WINDOW = D.currentWeeklyLbs * D.weeks;
+const MULT = BASE.lbs / CURRENT_WINDOW;
+const priority = D.counties.filter(c => D.priorityCounties.includes(c.name));
+const prioSum = priority.reduce((a, c) => a + c.lbs, 0);
+const prioShare = prioSum / SUM;
+const equalShare = priority.length / D.counties.length;
+const top2 = [...D.counties].sort((a, b) => b.lbs - a.lbs).slice(0, 2);
+const top2Share = top2.reduce((a, c) => a + c.lbs, 0) / SUM;
+
+/* ---------- extracted items ---------- */
+const AUTO_ITEMS = [
+  { name: `Current ops: ${fmt(D.currentWeeklyLbs)} lbs/week`, plan: "callout" },
+  { name: `Planning window: ${D.weeks} weeks`, plan: "callout" },
+  { name: `Scenario totals: ${D.scenarios.map(s => fmtM(s.lbs)).join(" / ")}`, plan: "bar" },
+  { name: `Scenario shares: ${D.scenarios.map(s => s.pct).join(" / ")}%`, plan: "waterfall" },
+  { name: `SNAP rates by county`, plan: "bar" }
+];
+const FLAG_ITEMS = [
+  { flag: "f1", name: `County allocations (${D.counties.length} counties)`, plan: "bar" },
+  { flag: "f2", name: `“${fmtM(BASE.lbs)} extra lbs in ${D.weeks} weeks is realistic”`, plan: "callout" },
+  { flag: "f3", name: `Priority areas: ${D.priorityCounties.join(" & ")}`, plan: "callout" }
+];
+const PLAN_LABEL = { bar: "horizontal bar chart", waterfall: "waterfall chart", callout: "callout box" };
+
+/* ---------- flags ---------- */
+const FLAGS = [
+  {
+    id: "f1", sev: "inc", tagText: "Inconsistency",
+    desc: `County allocations sum to ~${fmtM(SUM)} lbs, but the baseline scenario total is ${fmtM(BASE.lbs)} lbs.`,
+    math: D.counties.map(c => fmt(c.lbs)).join(" + "),
+    result: `= ${fmt(SUM)} lbs vs ${fmt(BASE.lbs)} baseline (off by ${fmt(Math.abs(SUM - BASE.lbs))})`,
+    quote: D.quotes.allocation
+  },
+  {
+    id: "f2", sev: "uns", tagText: "Unsupported claim",
+    desc: `The memo calls ${fmtM(BASE.lbs)} extra lbs over ${D.weeks === 2 ? "two" : D.weeks} weeks “realistic,” but that is about ${Math.round(MULT)}× current throughput.`,
+    math: `Current: ${fmt(D.currentWeeklyLbs)} lbs/week × ${D.weeks} weeks = ${fmt(CURRENT_WINDOW)} lbs`,
+    result: `${fmt(BASE.lbs)} ÷ ${fmt(CURRENT_WINDOW)} = ${MULT.toFixed(1)}× current output`,
+    quote: D.quotes.realistic
+  },
+  {
+    id: "f3", sev: "inc", tagText: "Inconsistency",
+    desc: `${D.priorityCounties.join(" and ")} are called priority areas (highest SNAP use, ${D.prioritySnapRange}), yet together get only ${pct1(prioShare)} of pounds.`,
+    math: `${priority.map(c => c.name + " " + fmt(c.lbs)).join(" + ")} = ${fmt(prioSum)} lbs`,
+    result: `${fmt(prioSum)} ÷ ${fmt(SUM)} = ${pct1(prioShare)} of total (an equal split would give ${pct1(equalShare)})`,
+    quote: D.quotes.priority
+  }
+];
+const STATUS_LABEL = { fix: "Marked to fix in source", footnote: "Kept with footnote", dismiss: "Dismissed" };
+
+/* ---------- state ---------- */
+let state;
+function freshState() {
+  return {
+    screen: 1,
+    flags: { f1: { status: null, reason: "" }, f2: { status: null, reason: "" }, f3: { status: null, reason: "" } },
+    dismissOpen: null,
+    acceptedOpen: false
+  };
+}
+const remaining = () => FLAGS.filter(f => !state.flags[f.id].status).length;
+
+/* ---------- build static DOM ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+$("memo").value =
+`MEMO — Surge planning: West Alabama food bank service area (9 counties)
+
+Current operations run at ${fmt(D.currentWeeklyLbs)} lbs/week. Scenarios for the ${D.weeks}-week surge window: ${D.scenarios.map(s => `${s.name} (${s.pct}%) ${fmt(s.lbs)} lbs`).join("; ")}.
+
+${D.quotes.realistic}
+
+Proposed extra allocation by county: ${D.counties.map(c => `${c.name} ${fmt(c.lbs)}`).join("; ")}.
+
+${D.quotes.priority} This plan is transparent and defensible.`;
+
+function planSelect(plan, key) {
+  return `<select class="mini" data-key="${key}">` +
+    ["bar", "waterfall", "callout"].map(v => `<option value="${v}"${v === plan ? " selected" : ""}>${{ bar: "Bar", waterfall: "Waterfall", callout: "Callout box" }[v]}</option>`).join("") +
+    `</select>`;
+}
+function itemHtml(it, key, extraCls) {
+  return `<div class="item ${extraCls || ""}" ${it.flag ? `data-flag="${it.flag}"` : ""}>
+    <span class="state ${it.flag ? "warn" : "ok"}">${it.flag ? "!" : "✓"}</span>
+    <div class="txt"><div class="name">${esc(it.name)}</div><div class="plan" id="plan-${key}">Plan: ${PLAN_LABEL[it.plan]}</div></div>
+    ${planSelect(it.plan, key)}
+  </div>`;
+}
+function buildLeft() {
+  $("extractSub").textContent = `${AUTO_ITEMS.length + FLAG_ITEMS.length} claims and metrics parsed from the memo`;
+  $("leftScroll").innerHTML =
+    `<div class="group" id="accGroup">
+       <div class="group-head" id="accHead"><span class="state ok">✓</span>
+         <span class="name">${AUTO_ITEMS.length} high-confidence items auto-accepted</span><span class="chev">▶</span></div>
+       <div class="group-body">${AUTO_ITEMS.map((it, i) => itemHtml(it, "a" + i)).join("")}</div>
+     </div>
+     <div class="sect">Held for your review</div>` +
+    FLAG_ITEMS.map((it, i) => itemHtml(it, "x" + i, "flagged")).join("");
+}
+function buildCards() {
+  $("cards").innerHTML = FLAGS.map(f => `
+    <div class="card sev-${f.sev === "uns" ? "unsupported" : "inc"}" id="card-${f.id}">
+      <div class="body">
+        <span class="tag ${f.sev}">${f.tagText}</span>
+        <h3>${esc(f.desc)}</h3>
+        <div class="evgrid">
+          <div class="ev"><div class="k">Evidence</div><div class="math">${esc(f.math)}</div><div class="result">${esc(f.result)}</div></div>
+          <div class="src"><div class="k">From the memo</div>“${esc(f.quote)}”</div>
+        </div>
+        <div class="actions">
+          <button class="abtn" data-act="fix" data-id="${f.id}">Fix in source</button>
+          <button class="abtn" data-act="footnote" data-id="${f.id}">Keep with footnote</button>
+          <button class="abtn dismiss" data-act="dismiss" data-id="${f.id}">Dismiss…</button>
+        </div>
+        <div class="reason">
+          <input type="text" id="reason-${f.id}" placeholder="Reason for dismissing (required)" autocomplete="off">
+          <button class="abtn" id="confirm-${f.id}" data-act="confirm" data-id="${f.id}" disabled>Dismiss issue</button>
+          <button class="abtn" data-act="cancel" data-id="${f.id}">Cancel</button>
+        </div>
+      </div>
+      <div class="done-row"><span class="tick">✓</span><div class="lbl" id="lbl-${f.id}"></div>
+        <button class="link" data-act="undo" data-id="${f.id}">Undo</button></div>
+    </div>`).join("");
+}
+
+/* ---------- slide 3 ---------- */
+function buildSlide() {
+  const max = Math.max(...D.counties.map(c => c.lbs));
+  const rows = [...D.counties].sort((a, b) => b.lbs - a.lbs);
+  $("chart").innerHTML = rows.map(c => {
+    const pri = D.priorityCounties.includes(c.name);
+    return `<div class="bar-row"><div class="lab ${pri ? "pri" : ""}">${c.name}</div>
+      <div class="track"><div class="fill ${pri ? "pri" : ""}" data-w="${(c.lbs / max * 100).toFixed(2)}"></div></div>
+      <div class="val">${fmt(c.lbs)}</div></div>`;
+  }).join("");
+  $("slideTitle").textContent =
+    `${top2.map(c => c.name).join(" and ")} take ${Math.round(top2Share * 100)}% of surge pounds; ${D.priorityCounties.join(" and ")} receive ${Math.round(prioShare * 100)}%`;
+  $("slideFoot").textContent = "Allocations reconcile to scenario total; see assumptions.";
+}
+function animateBars(on) {
+  document.querySelectorAll(".fill").forEach(el => { el.style.width = on ? el.dataset.w + "%" : "0"; });
+}
+
+/* ---------- render ---------- */
+function render() {
+  document.querySelectorAll(".screen").forEach((el, i) => el.classList.toggle("active", state.screen === i + 1));
+  document.querySelectorAll(".step").forEach(el => {
+    const n = +el.dataset.step;
+    el.classList.toggle("active", n === state.screen);
+    el.classList.toggle("done", n < state.screen);
+  });
+
+  const rem = remaining();
+  $("counter").textContent = rem === 0 ? "All issues handled ✓" : `${rem} issue${rem === 1 ? "" : "s"} remaining`;
+  $("counter").classList.toggle("ok", rem === 0);
+
+  FLAGS.forEach((f, i) => {
+    const st = state.flags[f.id], card = $("card-" + f.id);
+    card.classList.toggle("done", !!st.status);
+    card.classList.toggle("dismissing", state.dismissOpen === f.id && !st.status);
+    if (st.status) {
+      $("lbl-" + f.id).innerHTML = st.status === "dismiss"
+        ? `<b>Dismissed</b> <span>· “${esc(st.reason)}”</span>`
+        : `<b>${STATUS_LABEL[st.status]}</b> <span>· ${esc(f.tagText)}</span>`;
+    }
+    const item = document.querySelector(`.item[data-flag="${f.id}"]`);
+    item.classList.toggle("resolved", !!st.status);
+    const stEl = item.querySelector(".state");
+    stEl.className = "state " + (st.status ? "resolved" : "warn");
+    stEl.textContent = st.status ? "✓" : "!";
+  });
+
+  $("accGroup").classList.toggle("open", state.acceptedOpen);
+  $("genBtn").className = "btn " + (rem === 0 ? "primary" : "secondary");
+  $("anywayNote").style.visibility = rem === 0 ? "hidden" : "visible";
+
+  // slide 3
+  const resolved = FLAGS.length - rem;
+  const b = $("badge");
+  b.className = "badge" + (rem ? " warn" : "");
+  b.textContent = rem ? `Logic checked · ${resolved}/${FLAGS.length} resolved` : `Logic checked ✓  ${resolved}/${FLAGS.length} resolved`;
+  const notes = $("notes");
+  notes.classList.toggle("show", rem > 0);
+  if (rem > 0) {
+    notes.innerHTML = `<b>Speaker notes — unresolved logic issues:</b> ` +
+      FLAGS.filter(f => !state.flags[f.id].status).map(f => esc(f.desc)).join(" &nbsp;•&nbsp; ");
+  }
+  animateBars(state.screen === 3);
+}
+
+/* ---------- navigation ---------- */
+const go = n => { state.screen = Math.max(1, Math.min(3, n)); state.dismissOpen = null; render(); };
+function reset() { state = freshState(); $("leftScroll").scrollTop = 0; $("cards").scrollTop = 0;
+  document.querySelectorAll("#cards input").forEach(i => i.value = "");
+  document.querySelectorAll("#cards .abtn[data-act=confirm]").forEach(b => b.disabled = true);
+  render(); }
+
+$("reviewBtn").onclick = () => go(2);
+$("back2").onclick = () => go(1);
+$("back3").onclick = () => go(2);
+$("genBtn").onclick = () => go(3);
+$("anywayBtn").onclick = () => go(3);
+
+document.addEventListener("change", e => {
+  if (e.target.matches("select.mini")) {
+    $("plan-" + e.target.dataset.key).textContent = "Plan: " + PLAN_LABEL[e.target.value];
+  }
+  if (e.target.tagName === "SELECT") e.target.blur();
+});
+$("cards").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const id = b.dataset.id, act = b.dataset.act, st = state.flags[id];
+  if (act === "fix" || act === "footnote") { st.status = act; state.dismissOpen = null; }
+  else if (act === "dismiss") { state.dismissOpen = id; }
+  else if (act === "cancel") { state.dismissOpen = null; }
+  else if (act === "undo") { st.status = null; st.reason = ""; }
+  else if (act === "confirm") {
+    const v = $("reason-" + id).value.trim();
+    if (v.length >= 3) { st.status = "dismiss"; st.reason = v; state.dismissOpen = null; }
+  }
+  render();
+  if (act === "dismiss") $("reason-" + id).focus();
+});
+$("cards").addEventListener("input", e => {
+  if (!e.target.matches("input")) return;
+  const id = e.target.id.replace("reason-", "");
+  $("confirm-" + id).disabled = e.target.value.trim().length < 3;
+});
+$("cards").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.matches("input")) {
+    const id = e.target.id.replace("reason-", ""), btn = $("confirm-" + id);
+    if (!btn.disabled) btn.click();
+  }
+  if (e.key === "Escape" && e.target.matches("input")) { state.dismissOpen = null; render(); e.target.blur(); }
+});
+document.addEventListener("keydown", e => {
+  if (e.target.matches && e.target.matches("input[type=text]")) return;   // typing a dismiss reason
+  if (e.key === "ArrowRight") { go(state.screen + 1); e.preventDefault(); }
+  else if (e.key === "ArrowLeft") { go(state.screen - 1); e.preventDefault(); }
+  else if (e.key === "r" || e.key === "R") { reset(); }
+});
+
+/* ---------- scale 1920x1080 stage to the window ---------- */
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  $("stage").style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener("resize", fit);
+
+buildLeft(); buildCards(); buildSlide(); fit();
+$("accHead").onclick = () => { state.acceptedOpen = !state.acceptedOpen; render(); };
+ state = freshState(); render();
+</script>
+</body>
+</html>
